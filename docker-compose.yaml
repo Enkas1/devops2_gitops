@@ -10,13 +10,17 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
+    networks:
+      - sportcenter_network
 
   backend:
     build:
-      context: ./backend
+      context: ./devops2_backend
     container_name: backend
     ports:
       - "5000:5000"
+    networks:
+      - sportcenter_network
     environment:
       - FLASK_APP=app.py
       - FLASK_ENV=development
@@ -30,14 +34,22 @@ services:
 
   frontend:
     build:
-      context: ./frontend
+      context: ./devops2_frontend
     container_name: frontend
     ports:
       - "80:80"
+    networks:
+      - sportcenter_network
     depends_on:
       - backend
     volumes:
       - shared-volume:/usr/share/nginx/html/templates  # Använd den delade volymen
+    
+
+networks:
+  sportcenter_network:
+    name: sportcenter_network
+    driver: bridge
 
 volumes:
   db_data:
