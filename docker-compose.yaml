@@ -14,8 +14,7 @@ services:
       - sportcenter_network
 
   backend:
-    build:
-      context: ./devops2_backend
+    image: enkas1/devops2_backend:latest
     container_name: backend
     ports:
       - "5000:5000"
@@ -33,8 +32,7 @@ services:
       - shared-volume:/app/templates  # Använd den delade volymen
 
   frontend:
-    build:
-      context: ./devops2_frontend
+    image: enkas1/devops2_frontend:latest
     container_name: frontend
     ports:
       - "80:80"

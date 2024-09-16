@@ -6,13 +6,13 @@ if [ -f .env ]; then
 fi
 
 # Sätt variabler
-IMAGE_NAME="vedmastaren/devops2_backend:latest"
+IMAGE_NAME="enkas1/devops2_backend:latest"
 DOCKERFILE_PATH="./devops2_backend"  # Denna ska vara mappen som innehåller Dockerfile
 DOCKERFILE_NAME="Dockerfile"  # Ange namnet på Dockerfile om det inte heter Dockerfile
 
 # Logga in på Docker Hub
 echo "Loggar in på Docker Hub"
-docker login --username vedmastaren --password $DOCKERHUB_PASSWORD || { echo "Misslyckades med att logga in. Kontrollera dina uppgifter."; exit 1; }
+docker login --username enkas1 --password $DOCKERHUB_PASSWORD || { echo "Misslyckades med att logga in. Kontrollera dina uppgifter."; exit 1; }
 
 # Bygg Docker-imagen
 echo "Bygger Docker-imagen"

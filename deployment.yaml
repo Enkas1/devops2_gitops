@@ -3,7 +3,34 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: sportcenter
-
+---
+# PersistentVolume för delad volym
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: shared-pv
+  namespace: sportcenter
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+    path: /tmp/hostpath-provisioner/sportcenter/shared-pvc-new
+---
+# PersistentVolumeClaim för delad volym
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: shared-pvc-new
+  namespace: sportcenter
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+---
 # PersistentVolumeClaim för PostgreSQL
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -81,51 +108,6 @@ spec:
     app: postgres
 ---
 
-# Deployment och Service för Frontend
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: frontend
-  namespace: sportcenter
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: frontend
-  template:
-    metadata:
-      labels:
-        app: frontend
-    spec:
-      containers:
-        - name: frontend
-          image: vedmastaren/devops2_frontend:latest
-          ports:
-            - containerPort: 5001
-          env:
-            - name: DATABASE_HOST
-              value: postgres
-            - name: DATABASE_PORT
-              value: "5432"
-            - name: DATABASE_USER
-              value: postgres
-            - name: DATABASE_PASSWORD
-              value: Mydatabase1391
-            - name: DATABASE_NAME
-              value: postgres
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: frontend
-  namespace: sportcenter
-spec:
-  ports:
-    - port: 5001
-      targetPort: 5001
-  selector:
-    app: frontend
----
 # Deployment och Service för Backend
 apiVersion: apps/v1
 kind: Deployment
@@ -143,21 +125,28 @@ spec:
         app: backend
     spec:
       containers:
-        - name: backend
-          image: vedmastaren/devops2_backend:latest
-          ports:
-            - containerPort: 5003
-          env:
-            - name: DATABASE_HOST
-              value: postgres
-            - name: DATABASE_PORT
-              value: "5432"
-            - name: DATABASE_USER
-              value: postgres
-            - name: DATABASE_PASSWORD
-              value: Mydatabase1391
-            - name: DATABASE_NAME
-              value: postgres
+      - name: backend
+        image: enkas1/devops2_backend:latest
+        ports:
+        - containerPort: 5000
+        env:
+        - name: DATABASE_HOST
+          value: "postgres"
+        - name: DATABASE_PORT
+          value: "5432"
+        - name: DATABASE_USER
+          value: "postgres"
+        - name: DATABASE_PASSWORD
+          value: "Mydatabase1391"
+        - name: DATABASE_NAME
+          value: "postgres"
+        volumeMounts:
+        - name: shared-templates
+          mountPath: /app/templates
+      volumes:
+      - name: shared-templates
+        persistentVolumeClaim:
+          claimName: shared-pvc-new
 ---
 apiVersion: v1
 kind: Service
@@ -166,7 +155,48 @@ metadata:
   namespace: sportcenter
 spec:
   ports:
-    - port: 5003
-      targetPort: 5003
+    - port: 5000
+      targetPort: 5000
   selector:
     app: backend
+---
+# Deployment och Service för Frontend
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: sportcenter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+      - name: frontend
+        image: enkas1/devops2_frontend:latest
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: shared-templates
+          mountPath: /usr/share/nginx/html/templates
+      volumes:
+      - name: shared-templates
+        persistentVolumeClaim:
+          claimName: shared-pvc-new
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: sportcenter
+spec:
+  ports:
+    - port: 80
+      targetPort: 80
+  selector:
+    app: frontend
