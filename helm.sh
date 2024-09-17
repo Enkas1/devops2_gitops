@@ -6,6 +6,8 @@
 # 2. Navigera till projektmappen där vi har våra skript
 # 3. choco install kubernetes-helm
 # 4. Efter installation, kör detta skript!
+# 5. Starta om allting!
+# 6. OBS, se nästa steg i prometheus skriptet
 
 # Lägg till Helm-repositories
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
@@ -25,7 +27,7 @@ kubectl get pods -n sportcenter
 # Hämta tjänsternas information
 kubectl get svc -n sportcenter
 
-# Hämta admin-lösenord för Grafana
+# Hämta admin-lösenord för Grafana (lösenord: prom-operator)
 echo "Hämtar admin-lösenord för Grafana..."
 GRAFANA_PASSWORD=$(kubectl get secret -n sportcenter prometheus-grafana -o jsonpath="{.data.admin-password}" | base64 --decode)
 echo "Grafana admin-lösenord: $GRAFANA_PASSWORD"
@@ -33,3 +35,5 @@ echo "Grafana admin-lösenord: $GRAFANA_PASSWORD"
 # Exponera Grafana via Minikube
 echo "Exponerar Grafana via Minikube..."
 minikube service prometheus-grafana -n sportcenter
+
+
